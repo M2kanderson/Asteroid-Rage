@@ -70,6 +70,7 @@
 	  this.gameOver = false;
 	  this.asteroids = [];
 	  this.bullets = [];
+	  this.explosions = [];
 	  this.addAsteroids();
 	};
 	
@@ -156,7 +157,7 @@
 	};
 	
 	Game.prototype.allObjects = function () {
-	  let objects = [this.ship].concat(this.bullets);
+	  let objects = [this.ship].concat(this.bullets).concat(this.explosions);
 	  this.asteroids.forEach((asteroid) => {
 	    objects.push(asteroid);
 	  });
@@ -392,6 +393,7 @@
 	const MovingObject = __webpack_require__(4);
 	const Asteroid = __webpack_require__(2);
 	const Bullet = __webpack_require__(7);
+	const Explosion = __webpack_require__(8);
 	
 	const DEFAULTS = {
 	  COLOR: "#3399ff",
@@ -445,6 +447,7 @@
 	Ship.prototype.collideWith = function (otherObject) {
 	  if( otherObject instanceof Asteroid ){
 	    this.lives -= 1;
+	    this.game.explosions.push(new Explosion(this.pos[0], this.pos[1]));
 	    if(this.lives <= 0){
 	      this.game.gameOver = true;
 	    }else{
@@ -467,12 +470,6 @@
 	
 	  let velx = 10 * Math.sin(this.rotation * Math.PI/180) + this.vel[0];
 	  let vely = -10 * Math.cos(this.rotation * Math.PI/180) + this.vel[1];
-	  // if(shipSpeed > 0){
-	  //   let velxRatio = this.vel[0]/shipSpeed;
-	  //   let velyRatio = this.vel[1]/shipSpeed;
-	  //   velx = this.vel[0] + 10*velxRatio;
-	  //   vely = this.vel[1] + 10*velyRatio;
-	  // }
 	
 	
 	  let options = {pos : this.pos, vel : [velx, vely], game : this.game};
@@ -550,6 +547,90 @@
 	};
 	
 	module.exports = Bullet;
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	const Particle = __webpack_require__(9);
+	const particles = [];
+	
+	const createBasicExplosion = function(x,y){
+	  this.pos = [x,y];
+	  for(let angle = 0; angle < 360; angle += 90){
+	    let particle = new Particle();
+	
+	    particle.x = x;
+	    particle.y = y;
+	
+	    particle.color = "#FF0000";
+	
+	    let speed = 50.0;
+	
+	    particle.velocityX = speed * Math.cos(angle * Math.PI/ 180);
+	    particle.velocityY = speed * Math.sin(angle * Math.PI/180);
+	    particles.push(particle);
+	  }
+	};
+	
+	createBasicExplosion.prototype.move = function () {
+	
+	};
+	
+	createBasicExplosion.prototype.draw = function(ctx){
+	  particles.forEach((particle) =>{
+	    particle.draw(ctx);
+	  });
+	};
+	
+	createBasicExplosion.prototype.isCollidedWith = function(otherObject){
+	  return false;
+	};
+	
+	module.exports = createBasicExplosion;
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports) {
+
+	const Particle = function(){
+	  this.scale = 1.0;
+	  this.x = 0;
+	  this.y = 0;
+	  this.radius = 20;
+	  this.color = "#000";
+	  this.velocityX = 0;
+	  this.velocityY = 0;
+	  this.scaleSpeed = 0.5;
+	
+	  this.update = function(ms = 20){
+	    this.scale -= this.scaleSpeed * ms/ 1000.0;
+	    if(this.scale <= 0){
+	      this.scale = 0;
+	    }
+	    this.x += this.velocityX * ms/1000.0;
+	    this.y += this.velocityY * ms/1000.0;
+	  };
+	
+	  this.draw = function(ctx)
+	  {
+	    this.update();
+	    ctx.save();
+	    ctx.translate(this.x, this.y);
+	    ctx.scale(this.scale, this.scale);
+	    ctx.beginPath();
+	    ctx.arc(0,0,this.radius,0, Math.PI*2, true);
+	    ctx.closePath();
+	    ctx.fillStyle = this.color;
+	    ctx.fill();
+	    ctx.restore();
+	  };
+	};
+	
+	
+	module.exports = Particle;
 
 
 /***/ }

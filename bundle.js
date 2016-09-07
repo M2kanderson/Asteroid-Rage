@@ -68,6 +68,7 @@
 	
 	
 	const Game = function(){
+	  this.muteSounds = false;
 	  this.gameOver = false;
 	  this.asteroids = [];
 	  this.bullets = [];
@@ -346,9 +347,11 @@
 	    // e.preventDefault();
 	    if(muteButton.text() === "Mute"){
 	      this.bgMusic.stop();
+	      this.game.muteSounds = true;
 	      muteButton.text("Play Music");
 	    }else{
 	      this.bgMusic.play();
+	      this.game.muteSounds = false;
 	      muteButton.text("Mute");
 	    }
 	
@@ -525,6 +528,7 @@
 	const MovingObject = __webpack_require__(4);
 	const Asteroid = __webpack_require__(2);
 	const Explosion = __webpack_require__(8);
+	const Sound = __webpack_require__(11);
 	
 	const DEFAULTS = {
 	  COLOR: "#ffffff",
@@ -533,6 +537,10 @@
 	};
 	
 	const Bullet = function(options){
+	  if(!options.game.muteSounds){
+	    this.sound = new Sound("./media/Laser_Blast.mp3",{volume: 0.1});
+	    this.sound.play();
+	  }
 	  options.pos = options.pos;
 	  options.color = DEFAULTS.COLOR;
 	  options.radius = DEFAULTS.RADIUS;
@@ -657,6 +665,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const Particle = __webpack_require__(9);
+	const Sound = __webpack_require__(11);
 	const particles = [];
 	
 	function randomFloat(min, max){
@@ -664,6 +673,8 @@
 	}
 	
 	const createBasicExplosion = function(x,y,color,game){
+	  this.sound = new Sound("./media/Explosion.mp3",{volume: 0.1});
+	  this.sound.play();
 	  this.pos = [x,y];
 	  this.game = game;
 	  let minSize = 10;
@@ -710,17 +721,22 @@
 /***/ function(module, exports) {
 
 	
-	function sound(src) {
+	function sound(src, options = {}) {
 	    this.sound = document.createElement("audio");
 	    this.sound.src = src;
 	    this.sound.setAttribute("preload", "auto");
 	    this.sound.setAttribute("controls", "none");
 	    this.sound.style.display = "none";
+	    this.sound.volume = options.volume || 1;
+	    this.sound.repeat = options.repeat || false;
 	    document.body.appendChild(this.sound);
-	    this.sound.addEventListener('ended', function() {
-	      this.currentTime = 0;
-	      this.play();
-	  }, false);
+	    if(this.sound.repeat){
+	      this.sound.addEventListener('ended', function() {
+	        this.currentTime = 0;
+	        this.play();
+	      }, false);
+	    }
+	
 	    this.play = function(){
 	        this.sound.play();
 	    };

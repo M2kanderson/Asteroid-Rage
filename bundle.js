@@ -67,6 +67,7 @@
 	
 	
 	const Game = function(){
+	  this.gameOver = false;
 	  this.asteroids = [];
 	  this.bullets = [];
 	  this.addAsteroids();
@@ -335,7 +336,11 @@
 	
 	GameView.prototype.start = function () {
 	  this.bindKeyHandlers();
-	  window.setInterval(()=>{
+	  this.gameInterval = window.setInterval(()=>{
+	    if(this.game.gameOver){
+	      window.clearInterval(this.gameInterval);
+	      $(".game-over").addClass('active');
+	    }
 	    this.game.step();
 	    this.game.draw(this.ctx);
 	  }, 20);
@@ -359,6 +364,7 @@
 	};
 	
 	const Ship = function(options){
+	  this.lives = 3;
 	  options.vel = [0,0];
 	  options.color = DEFAULTS.COLOR;
 	  options.radius = DEFAULTS.RADIUS;
@@ -375,7 +381,12 @@
 	
 	Ship.prototype.collideWith = function (otherObject) {
 	  if( otherObject instanceof Asteroid ){
-	    this.relocate();
+	    this.lives -= 1;
+	    if(this.lives <= 0){
+	      this.game.gameOver = true;
+	    }else{
+	      this.relocate();
+	    }
 	    return true;
 	  }
 	};

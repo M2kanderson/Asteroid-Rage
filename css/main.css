@@ -25,3 +25,9 @@
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+.mute-button{
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}

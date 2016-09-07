@@ -313,6 +313,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const Game = __webpack_require__(1);
+	const Sound = __webpack_require__(11);
 	
 	const GameView = function(game, ctx){
 	  this.game = game;
@@ -331,32 +332,38 @@
 	  "a": -10,
 	  "d": 10
 	};
-	
-	GameView.prototype.bindKeyHandlers = function () {
-	  const ship = this.ship;
-	
-	  Object.keys(GameView.MOVES).forEach((k) => {
-	    let move = GameView.MOVES[k];
-	    let rotation = GameView.ROTATION[k];
-	    key(k, function () {
-	      ship.power(move);
-	      ship.rotate(rotation);
-	    });
-	  });
-	
-	  key("space", function () { ship.fireBullet() });
-	};
-	
-	GameView.prototype.start = function () {
-	  // this.bindKeyHandlers();
-	  this.keysPressed = {};
-	  this.lastFireTime = 0;
+	GameView.prototype.addEventListeners = function(){
 	  window.addEventListener("keydown", (e)=>{
+	    e.preventDefault();
 	    this.keysPressed[e.key] = true;
 	  });
 	  window.addEventListener("keyup", (e)=>{
+	    // e.preventDefault();
 	    delete this.keysPressed[e.key];
 	  });
+	  let muteButton = $('.mute-button');
+	  muteButton.click( (e) =>{
+	    // e.preventDefault();
+	    if(muteButton.text() === "Mute"){
+	      this.bgMusic.stop();
+	      muteButton.text("Play Music");
+	    }else{
+	      this.bgMusic.play();
+	      muteButton.text("Mute");
+	    }
+	
+	  });
+	};
+	
+	
+	GameView.prototype.start = function () {
+	  this.addEventListeners();
+	  this.bgMusic = new Sound("./media/QziF-toby fox - UNDERTALE Soundtrack - 100 MEGALOVANIA longer.mp3");
+	
+	  this.bgMusic.play();
+	  this.keysPressed = {};
+	  this.lastFireTime = 0;
+	
 	
 	  this.gameInterval = window.setInterval(()=>{
 	    this.ship.drawBooster = false;
@@ -674,7 +681,6 @@
 	    particle.color = color;
 	    particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed);
 	    let speed = randomFloat(minSpeed, maxSpeed);
-	    console.log(speed);
 	    particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0);
 	    particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0);
 	    // console.log(particle);
@@ -697,6 +703,33 @@
 	};
 	
 	module.exports = createBasicExplosion;
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	
+	function sound(src) {
+	    this.sound = document.createElement("audio");
+	    this.sound.src = src;
+	    this.sound.setAttribute("preload", "auto");
+	    this.sound.setAttribute("controls", "none");
+	    this.sound.style.display = "none";
+	    document.body.appendChild(this.sound);
+	    this.sound.addEventListener('ended', function() {
+	      this.currentTime = 0;
+	      this.play();
+	  }, false);
+	    this.play = function(){
+	        this.sound.play();
+	    };
+	    this.stop = function(){
+	        this.sound.pause();
+	    };
+	}
+	
+	module.exports = sound;
 
 
 /***/ }

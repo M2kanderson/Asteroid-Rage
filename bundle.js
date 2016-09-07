@@ -74,7 +74,7 @@
 	
 	Game.DIM_X = 1200;
 	Game.DIM_Y = 600;
-	Game.NUM_ASTEROIDS = 4;
+	Game.NUM_ASTEROIDS = 6;
 	
 	Game.prototype.addAsteroids = function(){
 	  for(let i = 0; i < Game.NUM_ASTEROIDS; i++){
@@ -182,11 +182,12 @@
 	
 	const DEFAULTS = {
 	  COLOR: "#505050",
-	  RADIUS: 25,
-	  SPEED: 4
+	  RADIUS: 40,
+	  SPEED: 2
 	};
 	
 	const Asteroid = function(options){
+	  this.life = 3;
 	  options.pos = options.pos;
 	  options.color = DEFAULTS.COLOR;
 	  options.radius = DEFAULTS.RADIUS;
@@ -433,9 +434,11 @@
 	
 	Bullet.prototype.collideWith = function (otherObject) {
 	  if((otherObject) instanceof Asteroid){
-	    this.game.remove(otherObject);
+	    otherObject.life -= 1;
+	    if(otherObject.life <=0){
+	      this.game.remove(otherObject);
+	    }
 	    this.game.remove(this);
-	    return true;
 	  }
 	};
 	

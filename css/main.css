@@ -11,10 +11,17 @@
   display: none;
   position: absolute;
   font-size: 36px;
+  color: white;
   /*bottom: 50%;
   left: 50%;*/
 }
 
 .active{
   display: block;
+}
+
+#game-canvas{
+  background: url('../img/162890612.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
 }

@@ -191,7 +191,7 @@
 	  this.life = 3;
 	  options.pos = options.pos;
 	  options.color = DEFAULTS.COLOR;
-	  options.radius = DEFAULTS.RADIUS;
+	  options.radius = options.radius || DEFAULTS.RADIUS;
 	  options.vel = options.vel || Util.randomVec(DEFAULTS.SPEED);
 	  MovingObject.call(this, options);
 	};
@@ -256,7 +256,7 @@
 	
 	  ctx.fill();
 	  ctx.lineWidth = 5;
-	  ctx.strokeStyle = '#003300';
+	  ctx.strokeStyle = '#fff';
 	  ctx.stroke();
 	  ctx.closePath();
 	};
@@ -317,10 +317,15 @@
 	};
 	
 	GameView.MOVES = {
-	  "w": [ 0, -1],
-	  "a": [-1,  0],
-	  "s": [ 0,  1],
-	  "d": [ 1,  0],
+	  "w": [ 0, -0.5],
+	  // "a": [-1,  0],
+	  "s": [ 0,  0.5],
+	  // "d": [ 1,  0],
+	};
+	
+	GameView.ROTATION = {
+	  "a": -10,
+	  "d": 10
 	};
 	
 	GameView.prototype.bindKeyHandlers = function () {
@@ -328,19 +333,49 @@
 	
 	  Object.keys(GameView.MOVES).forEach((k) => {
 	    let move = GameView.MOVES[k];
-	    key(k, function () { ship.power(move); });
+	    let rotation = GameView.ROTATION[k];
+	    key(k, function () {
+	      ship.power(move);
+	      ship.rotate(rotation);
+	    });
 	  });
 	
 	  key("space", function () { ship.fireBullet() });
 	};
 	
 	GameView.prototype.start = function () {
-	  this.bindKeyHandlers();
+	  // this.bindKeyHandlers();
+	  this.keysPressed = {};
+	  this.lastFireTime = 0;
+	  window.addEventListener("keydown", (e)=>{
+	    this.keysPressed[e.key] = true;
+	  });
+	  window.addEventListener("keyup", (e)=>{
+	    delete this.keysPressed[e.key];
+	  });
+	
 	  this.gameInterval = window.setInterval(()=>{
+	    this.ship.drawBooster = false;
 	    if(this.game.gameOver){
 	      window.clearInterval(this.gameInterval);
 	      $(".game-over").addClass('active');
 	    }
+	    Object.keys(this.keysPressed).forEach((key) =>{
+	      let move = GameView.MOVES[key];
+	      let rotation = GameView.ROTATION[key];
+	      if(move){
+	        this.ship.power(move);
+	        this.ship.drawBooster = true;
+	      }
+	      if(rotation){
+	        this.ship.rotate(rotation);
+	      }
+	
+	      if(key === " " && new Date - this.lastFireTime >= 300){
+	        this.lastFireTime = new Date();
+	        this.ship.fireBullet();
+	      }
+	    });
 	    this.game.step();
 	    this.game.draw(this.ctx);
 	  }, 20);
@@ -364,7 +399,9 @@
 	};
 	
 	const Ship = function(options){
+	  this.drawBooster = false;
 	  this.lives = 3;
+	  this.rotation = 0;
 	  options.vel = [0,0];
 	  options.color = DEFAULTS.COLOR;
 	  options.radius = DEFAULTS.RADIUS;
@@ -373,6 +410,32 @@
 	
 	
 	Util.inherits(Ship, MovingObject);
+	
+	Ship.prototype.draw = function (ctx) {
+	  ctx.save();
+	  ctx.translate(this.pos[0], this.pos[1]);
+	  ctx.rotate(this.rotation * Math.PI/180);
+	  // ctx.fillStyle = this.color;
+	  // ctx.beginPath();
+	  // ctx.arc(0, 0, this.radius, 0, 2 * Math.PI, false);
+	  //
+	  // ctx.fill();
+	  // ctx.closePath();
+	
+	  ctx.fillStyle = '#99ff33';
+	  ctx.beginPath();
+	  ctx.moveTo(0 + this.radius,0 + this.radius);
+	  ctx.lineTo(0 - this.radius,0 + this.radius);
+	  ctx.lineTo(0, 0 - this.radius);
+	  ctx.fill();
+	  ctx.closePath();
+	  if(this.drawBooster){
+	    ctx.fillStyle = 'red';
+	    ctx.fillRect(-this.radius/4,this.radius,this.radius/2,this.radius);
+	  }
+	
+	  ctx.restore();
+	};
 	
 	Ship.prototype.relocate = function () {
 	  this.pos = this.game.randomPosition();
@@ -392,26 +455,53 @@
 	};
 	
 	Ship.prototype.power = function (move) {
-	  let x = this.vel[0] + move[0] < 20 ? this.vel[0] + move[0] : this.vel[0];
-	  let y = this.vel[1] + move[1] < 20 ? this.vel[1] + move[1] : this.vel[1];
+	  let yMove = move[1] * Math.cos(this.rotation * Math.PI/180);
+	  let xMove = -move[1] * Math.sin(this.rotation * Math.PI/180);
+	  let x = Math.abs(this.vel[0] + xMove) < 20 ? this.vel[0] + xMove: this.vel[0];
+	  let y = Math.abs(this.vel[1] + yMove) < 20 ? this.vel[1] + yMove: this.vel[1];
 	  this.vel = [x, y];
 	};
 	
 	Ship.prototype.fireBullet = function () {
 	  let shipSpeed = Math.sqrt(Math.pow(this.vel[0], 2) + Math.pow(this.vel[1], 2));
-	  let velx = 0;
-	  let vely = -10;
-	  if(shipSpeed > 0){
-	    let velxRatio = this.vel[0]/shipSpeed;
-	    let velyRatio = this.vel[1]/shipSpeed;
-	    velx = this.vel[0] + 10*velxRatio;
-	    vely = this.vel[1] + 10*velyRatio;
-	  }
+	
+	  let velx = 10 * Math.sin(this.rotation * Math.PI/180) + this.vel[0];
+	  let vely = -10 * Math.cos(this.rotation * Math.PI/180) + this.vel[1];
+	  // if(shipSpeed > 0){
+	  //   let velxRatio = this.vel[0]/shipSpeed;
+	  //   let velyRatio = this.vel[1]/shipSpeed;
+	  //   velx = this.vel[0] + 10*velxRatio;
+	  //   vely = this.vel[1] + 10*velyRatio;
+	  // }
 	
 	
 	  let options = {pos : this.pos, vel : [velx, vely], game : this.game};
 	  let bullet = new Bullet(options);
 	  this.game.bullets.push(bullet);
+	};
+	
+	Ship.prototype.rotate = function(rotation){
+	  this.rotation += rotation;
+	};
+	
+	Ship.prototype.drawBooster = function (ctx) {
+	  ctx.save();
+	  ctx.translate(this.pos[0], this.pos[1]);
+	  ctx.rotate(this.rotation * Math.PI/180);
+	  ctx.fillStyle = 'red';
+	  // ctx.beginPath();
+	  ctx.moveTo(0 + this.radius/2,0 + this.radius);
+	  // console.log([0 + this.radius/2,0 + this.radius]);
+	  ctx.lineTo(0 - this.radius/2,0 + this.radius);
+	  // console.log([0 - this.radius/2,0 + this.radius]);
+	  ctx.lineTo(0 - this.radius/2,3 + this.radius);
+	  // console.log([0 - this.radius/2,3 + this.radius]);
+	  // ctx.lineTo(0 + this.radius/2,3 + this.radius);
+	  // console.log([0 + this.radius/2,3 + this.radius]);
+	  ctx.fill();
+	  ctx.closePath();
+	  ctx.fillRect(0,0,100,100);
+	  ctx.restore();
 	};
 	
 	module.exports = Ship;
@@ -426,7 +516,7 @@
 	const Asteroid = __webpack_require__(2);
 	
 	const DEFAULTS = {
-	  COLOR: "#000000",
+	  COLOR: "#ffffff",
 	  RADIUS: 2,
 	  SPEED: 10
 	};
@@ -447,6 +537,12 @@
 	  if((otherObject) instanceof Asteroid){
 	    otherObject.life -= 1;
 	    if(otherObject.life <=0){
+	      if(otherObject.radius > 10){
+	        for(let i = 0; i < 2; i++){
+	          let options = {pos : otherObject.pos, game : this.game, radius : otherObject.radius/2};
+	          this.game.asteroids.push( new Asteroid(options));
+	        }
+	      }
 	      this.game.remove(otherObject);
 	    }
 	    this.game.remove(this);

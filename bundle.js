@@ -317,6 +317,7 @@
 	const Sound = __webpack_require__(11);
 	
 	const GameView = function(game, ctx){
+	  this.pause = false;
 	  this.game = game;
 	  this.ctx = ctx;
 	  this.ship = this.game.addShip();
@@ -333,27 +334,43 @@
 	  "a": -10,
 	  "d": 10
 	};
+	
+	GameView.SOUND_CONTROLS ={
+	  "m": "mute"
+	};
+	
+	GameView.prototype.muteUnmute = function () {
+	  let muteButton = $('.mute-button');
+	  if(muteButton.text() === "Mute"){
+	    this.bgMusic.stop();
+	    this.game.muteSounds = true;
+	    muteButton.text("Play Music");
+	  }else{
+	    this.bgMusic.play();
+	    this.game.muteSounds = false;
+	    muteButton.text("Mute");
+	  }
+	};
 	GameView.prototype.addEventListeners = function(){
 	  window.addEventListener("keydown", (e)=>{
-	    e.preventDefault();
+	    // e.preventDefault();
+	    if(GameView.SOUND_CONTROLS[e.key]){
+	      if(GameView.SOUND_CONTROLS[e.key] === "mute"){
+	        this.muteUnmute();
+	      }
+	    }else if(e.key == "p"){
+	      this.pause = this.pause ? false : true;
+	    }
 	    this.keysPressed[e.key] = true;
 	  });
 	  window.addEventListener("keyup", (e)=>{
 	    // e.preventDefault();
 	    delete this.keysPressed[e.key];
 	  });
-	  let muteButton = $('.mute-button');
-	  muteButton.click( (e) =>{
-	    // e.preventDefault();
-	    if(muteButton.text() === "Mute"){
-	      this.bgMusic.stop();
-	      this.game.muteSounds = true;
-	      muteButton.text("Play Music");
-	    }else{
-	      this.bgMusic.play();
-	      this.game.muteSounds = false;
-	      muteButton.text("Mute");
-	    }
+	
+	  $('.mute-button').click( (e) =>{
+	    e.preventDefault();
+	    this.muteUnmute();
 	
 	  });
 	};
@@ -361,7 +378,7 @@
 	
 	GameView.prototype.start = function () {
 	  this.addEventListeners();
-	  this.bgMusic = new Sound("./media/QziF-toby fox - UNDERTALE Soundtrack - 100 MEGALOVANIA longer.mp3");
+	  this.bgMusic = new Sound("./media/QziF-toby fox - UNDERTALE Soundtrack - 100 MEGALOVANIA longer.mp3", {repeat: true});
 	
 	  this.bgMusic.play();
 	  this.keysPressed = {};
@@ -369,29 +386,34 @@
 	
 	
 	  this.gameInterval = window.setInterval(()=>{
-	    this.ship.drawBooster = false;
-	    if(this.game.gameOver){
-	      window.clearInterval(this.gameInterval);
-	      $(".game-over").addClass('active');
-	    }
-	    Object.keys(this.keysPressed).forEach((key) =>{
-	      let move = GameView.MOVES[key];
-	      let rotation = GameView.ROTATION[key];
-	      if(move){
-	        this.ship.power(move);
-	        this.ship.drawBooster = true;
+	    if(!this.pause){
+	      this.ship.drawBooster = false;
+	      if(this.game.gameOver){
+	        window.clearInterval(this.gameInterval);
+	        $(".game-over").addClass('active');
 	      }
-	      if(rotation){
-	        this.ship.rotate(rotation);
-	      }
+	      Object.keys(this.keysPressed).forEach((key) =>{
+	        let move = GameView.MOVES[key];
+	        let rotation = GameView.ROTATION[key];
+	        if(move){
+	          this.ship.power(move);
+	          this.ship.drawBooster = true;
+	        }
+	        if(rotation){
+	          this.ship.rotate(rotation);
+	        }
 	
-	      if(key === " " && new Date - this.lastFireTime >= 300){
-	        this.lastFireTime = new Date();
-	        this.ship.fireBullet();
-	      }
-	    });
-	    this.game.step();
-	    this.game.draw(this.ctx);
+	        if(key === " " && new Date - this.lastFireTime >= 300){
+	          this.lastFireTime = new Date();
+	          this.ship.fireBullet();
+	        }
+	
+	      });
+	
+	      this.game.step();
+	      this.game.draw(this.ctx);
+	    }
+	
 	  }, 20);
 	};
 	
@@ -728,9 +750,9 @@
 	    this.sound.setAttribute("controls", "none");
 	    this.sound.style.display = "none";
 	    this.sound.volume = options.volume || 1;
-	    this.sound.repeat = options.repeat || false;
+	    this.repeat = options.repeat || false;
 	    document.body.appendChild(this.sound);
-	    if(this.sound.repeat){
+	    if(this.repeat){
 	      this.sound.addEventListener('ended', function() {
 	        this.currentTime = 0;
 	        this.play();

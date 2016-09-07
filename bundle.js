@@ -64,6 +64,7 @@
 	const Asteroid = __webpack_require__(2);
 	const Ship = __webpack_require__(6);
 	const Bullet = __webpack_require__(7);
+	const Explosion = __webpack_require__(8);
 	
 	
 	const Game = function(){
@@ -148,6 +149,8 @@
 	    this.asteroids.splice(this.asteroids.indexOf(object), 1);
 	  } else if (object instanceof Ship) {
 	    this.ships.splice(this.ships.indexOf(object), 1);
+	  } else if(object instanceof Explosion){
+	    this.explosions.splice(this.explosions.indexOf(object), 1);
 	  }
 	};
 	
@@ -157,10 +160,10 @@
 	};
 	
 	Game.prototype.allObjects = function () {
-	  let objects = [this.ship].concat(this.bullets).concat(this.explosions);
-	  this.asteroids.forEach((asteroid) => {
-	    objects.push(asteroid);
-	  });
+	  let objects = [this.ship].concat(this.bullets).concat(this.asteroids).concat(this.explosions);
+	  // this.asteroids.forEach((asteroid) => {
+	  //   objects.push(asteroid);
+	  // });
 	  return objects;
 	};
 	
@@ -393,7 +396,8 @@
 	const MovingObject = __webpack_require__(4);
 	const Asteroid = __webpack_require__(2);
 	const Bullet = __webpack_require__(7);
-	const Explosion = __webpack_require__(8);
+	// const Explosion = require("./explosion.js");
+	const Explosion2 = __webpack_require__(10);
 	
 	const DEFAULTS = {
 	  COLOR: "#3399ff",
@@ -447,7 +451,9 @@
 	Ship.prototype.collideWith = function (otherObject) {
 	  if( otherObject instanceof Asteroid ){
 	    this.lives -= 1;
-	    this.game.explosions.push(new Explosion(this.pos[0], this.pos[1]));
+	    // this.game.explosions.push(new Explosion(this.pos[0], this.pos[1], this.game));
+	    this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#525252", this.game));
+	    this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#FFA318", this.game));
 	    if(this.lives <= 0){
 	      this.game.gameOver = true;
 	    }else{
@@ -511,6 +517,7 @@
 	const Util = __webpack_require__(3);
 	const MovingObject = __webpack_require__(4);
 	const Asteroid = __webpack_require__(2);
+	const Explosion = __webpack_require__(8);
 	
 	const DEFAULTS = {
 	  COLOR: "#ffffff",
@@ -534,6 +541,7 @@
 	  if((otherObject) instanceof Asteroid){
 	    otherObject.life -= 1;
 	    if(otherObject.life <=0){
+	      this.game.explosions.push(new Explosion(otherObject.pos[0], otherObject.pos[1], this.game));
 	      if(otherObject.radius > 10){
 	        for(let i = 0; i < 2; i++){
 	          let options = {pos : otherObject.pos, game : this.game, radius : otherObject.radius/2};
@@ -556,8 +564,9 @@
 	const Particle = __webpack_require__(9);
 	const particles = [];
 	
-	const createBasicExplosion = function(x,y){
+	const createBasicExplosion = function(x,y,game){
 	  this.pos = [x,y];
+	  this.game = game;
 	  for(let angle = 0; angle < 360; angle += 90){
 	    let particle = new Particle();
 	
@@ -572,6 +581,9 @@
 	    particle.velocityY = speed * Math.sin(angle * Math.PI/180);
 	    particles.push(particle);
 	  }
+	  window.setTimeout(() => {
+	    this.game.remove(this);
+	  }, 3000);
 	};
 	
 	createBasicExplosion.prototype.move = function () {
@@ -631,6 +643,60 @@
 	
 	
 	module.exports = Particle;
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	const Particle = __webpack_require__(9);
+	const particles = [];
+	
+	function randomFloat(min, max){
+	  return min + Math.random()*(max-min);
+	}
+	
+	const createBasicExplosion = function(x,y,color,game){
+	  this.pos = [x,y];
+	  this.game = game;
+	  let minSize = 10;
+	  let maxSize = 30;
+	  let count = 10;
+	  let minSpeed = 40.0;
+	  let maxSpeed = 150.0;
+	  let minScaleSpeed = 0.5;
+	  let maxScaleSpeed = 2.0;
+	  for(let angle = 0; angle < 360; angle += Math.round(360/count)){
+	    let particle = new Particle();
+	    particle.x = x;
+	    particle.y = y;
+	    particle.radius = randomFloat(minSize, maxSize);
+	    particle.color = color;
+	    particle.scaleSpeed = randomFloat(minScaleSpeed, maxScaleSpeed);
+	    let speed = randomFloat(minSpeed, maxSpeed);
+	    console.log(speed);
+	    particle.velocityX = speed * Math.cos(angle * Math.PI / 180.0);
+	    particle.velocityY = speed * Math.sin(angle * Math.PI / 180.0);
+	    // console.log(particle);
+	    particles.push(particle);
+	  }
+	};
+	
+	createBasicExplosion.prototype.move = function () {
+	
+	};
+	
+	createBasicExplosion.prototype.draw = function(ctx){
+	  particles.forEach((particle) =>{
+	    particle.draw(ctx);
+	  });
+	};
+	
+	createBasicExplosion.prototype.isCollidedWith = function(otherObject){
+	  return false;
+	};
+	
+	module.exports = createBasicExplosion;
 
 
 /***/ }

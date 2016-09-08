@@ -55,7 +55,10 @@
 	
 	  let game = new Game();
 	  let view = new GameView(game, ctx);
-	  view.start();
+	  $(".start-game").click(() =>{
+	    view.start();
+	    $(".start-menu").removeClass('active');
+	  });
 	  $(".try-again").click(() =>{
 	    // game = new Game();
 	    // new GameView(game, ctx).start();
@@ -67,7 +70,6 @@
 	    game.ship.lives = 3;
 	    game.ship.relocate();
 	    $(".game-over").removeClass('active');
-	    $(".try-again").removeClass('active');
 	    view.start({restart: true});
 	  });
 	});
@@ -402,7 +404,6 @@
 	  if(this.game.gameOver){
 	    window.clearInterval(this.gameInterval);
 	    $(".game-over").addClass('active');
-	    $(".try-again").addClass('active');
 	  }
 	  Object.keys(this.keysPressed).forEach((key) =>{
 	    let move = GameView.MOVES[key];

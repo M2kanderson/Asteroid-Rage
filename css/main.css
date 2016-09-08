@@ -43,8 +43,7 @@ time, mark, audio, video {
   left: 50%;*/
 }
 
-.try-again{
-  display: none;
+.try-again, .start-game{
   /*position: absolute;*/
   color: white;
   background-color: #128fdc;
@@ -88,7 +87,7 @@ time, mark, audio, video {
   right: 10px;
 }
 
-.pause-menu{
+.pause-menu, .start-menu{
   font-family: 'Lato', sans-serif;
   position: absolute;
   display: none;
@@ -102,6 +101,15 @@ time, mark, audio, video {
 }
 
 .pause-menu h2{
+  width: 100%;
+  font-size: 26px;
+  text-align: center;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid black;
+}
+
+.start-menu h2{
   width: 100%;
   font-size: 26px;
   text-align: center;

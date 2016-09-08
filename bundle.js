@@ -60,14 +60,13 @@
 	    $(".start-menu").removeClass('active');
 	  });
 	  $(".try-again").click(() =>{
-	    // game = new Game();
-	    // new GameView(game, ctx).start();
 	    game.gameOver = false;
 	    game.asteroids = [];
 	    game.explosions = [];
 	    game.bullets = [];
 	    game.addAsteroids();
 	    game.ship.lives = 3;
+	    game.ship.invulnerableTime = 2000;
 	    game.ship.relocate();
 	    $(".game-over").removeClass('active');
 	    view.start({restart: true});
@@ -112,8 +111,9 @@
 	};
 	
 	Game.prototype.randomPosition = function () {
-	  let randx = Math.random() * Game.DIM_X;
-	  let randy = Math.random() * Game.DIM_Y;
+	  let min = 30;
+	  let randx = min + (Math.random() * (Game.DIM_X-min));
+	  let randy = min + (Math.random() * (Game.DIM_Y-min));
 	  return [randx, randy];
 	};
 	
@@ -180,9 +180,6 @@
 	
 	Game.prototype.allObjects = function () {
 	  let objects = [this.ship].concat(this.bullets).concat(this.asteroids).concat(this.explosions);
-	  // this.asteroids.forEach((asteroid) => {
-	  //   objects.push(asteroid);
-	  // });
 	  return objects;
 	};
 	
@@ -466,6 +463,7 @@
 	};
 	
 	const Ship = function(options){
+	  this.invulnerableTime = 2000;
 	  this.drawBooster = false;
 	  this.lives = 3;
 	  this.rotation = 0;
@@ -480,16 +478,15 @@
 	
 	Ship.prototype.draw = function (ctx) {
 	  ctx.save();
+	  if(this.invulnerableTime > 0){
+	    this.invulnerableTime -= 20;
+	    ctx.fillStyle = 'rgba(200,255,51,0.6)';
+	  }else{
+	    ctx.fillStyle = '#99ff33';
+	  }
+	
 	  ctx.translate(this.pos[0], this.pos[1]);
 	  ctx.rotate(this.rotation * Math.PI/180);
-	  // ctx.fillStyle = this.color;
-	  // ctx.beginPath();
-	  // ctx.arc(0, 0, this.radius, 0, 2 * Math.PI, false);
-	  //
-	  // ctx.fill();
-	  // ctx.closePath();
-	
-	  ctx.fillStyle = '#99ff33';
 	  ctx.beginPath();
 	  ctx.moveTo(0 + this.radius,0 + this.radius);
 	  ctx.lineTo(0 - this.radius,0 + this.radius);
@@ -511,16 +508,18 @@
 	
 	Ship.prototype.collideWith = function (otherObject) {
 	  if( otherObject instanceof Asteroid ){
-	    this.lives -= 1;
-	    // this.game.explosions.push(new Explosion(this.pos[0], this.pos[1], this.game));
-	    this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#525252", this.game));
-	    this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#FFA318", this.game));
-	    if(this.lives <= 0){
-	      this.game.gameOver = true;
-	    }else{
-	      this.relocate();
+	    if(this.invulnerableTime <= 0){
+	      this.lives -= 1;
+	      this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#525252", this.game));
+	      this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#FFA318", this.game));
+	      if(this.lives <= 0){
+	        this.game.gameOver = true;
+	      }else{
+	        this.invulnerableTime = 2000;
+	        this.relocate();
+	      }
+	      return true;
 	    }
-	    return true;
 	  }
 	};
 	

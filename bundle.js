@@ -52,8 +52,24 @@
 	  el.width = Game.DIM_X;
 	  el.height = Game.DIM_Y;
 	  const ctx = el.getContext("2d");
-	  const game = new Game();
-	  new GameView(game, ctx).start();
+	
+	  let game = new Game();
+	  let view = new GameView(game, ctx);
+	  view.start();
+	  $(".try-again").click(() =>{
+	    // game = new Game();
+	    // new GameView(game, ctx).start();
+	    game.gameOver = false;
+	    game.asteroids = [];
+	    game.explosions = [];
+	    game.bullets = [];
+	    game.addAsteroids();
+	    game.ship.lives = 3;
+	    game.ship.relocate();
+	    $(".game-over").removeClass('active');
+	    $(".try-again").removeClass('active');
+	    view.start({restart: true});
+	  });
 	});
 
 
@@ -359,7 +375,13 @@
 	        this.muteUnmute();
 	      }
 	    }else if(e.key == "p"){
-	      this.pause = this.pause ? false : true;
+	      if(this.pause){
+	        $(".pause-menu").removeClass('active');
+	        this.pause = false;
+	      }else{
+	        $(".pause-menu").addClass('active');
+	        this.pause = true;
+	      }
 	    }
 	    this.keysPressed[e.key] = true;
 	  });
@@ -375,41 +397,47 @@
 	  });
 	};
 	
+	GameView.prototype.checkKeys = function(){
+	  this.ship.drawBooster = false;
+	  if(this.game.gameOver){
+	    window.clearInterval(this.gameInterval);
+	    $(".game-over").addClass('active');
+	    $(".try-again").addClass('active');
+	  }
+	  Object.keys(this.keysPressed).forEach((key) =>{
+	    let move = GameView.MOVES[key];
+	    let rotation = GameView.ROTATION[key];
+	    if(move){
+	      this.ship.power(move);
+	      this.ship.drawBooster = true;
+	    }
+	    if(rotation){
+	      this.ship.rotate(rotation);
+	    }
 	
-	GameView.prototype.start = function () {
-	  this.addEventListeners();
-	  this.bgMusic = new Sound("./media/QziF-toby fox - UNDERTALE Soundtrack - 100 MEGALOVANIA longer.mp3", {repeat: true});
+	    if(key === " " && new Date - this.lastFireTime >= 300){
+	      this.lastFireTime = new Date();
+	      this.ship.fireBullet();
+	    }
 	
-	  this.bgMusic.play();
-	  this.keysPressed = {};
-	  this.lastFireTime = 0;
+	  });
+	};
 	
+	
+	GameView.prototype.start = function (options = {}) {
+	  if(!options.restart){
+	    this.addEventListeners();
+	    this.bgMusic = new Sound("./media/QziF-toby fox - UNDERTALE Soundtrack - 100 MEGALOVANIA longer.mp3", {repeat: true});
+	
+	    this.bgMusic.play();
+	    this.keysPressed = {};
+	    this.lastFireTime = 0;
+	  }
 	
 	  this.gameInterval = window.setInterval(()=>{
 	    if(!this.pause){
-	      this.ship.drawBooster = false;
-	      if(this.game.gameOver){
-	        window.clearInterval(this.gameInterval);
-	        $(".game-over").addClass('active');
-	      }
-	      Object.keys(this.keysPressed).forEach((key) =>{
-	        let move = GameView.MOVES[key];
-	        let rotation = GameView.ROTATION[key];
-	        if(move){
-	          this.ship.power(move);
-	          this.ship.drawBooster = true;
-	        }
-	        if(rotation){
-	          this.ship.rotate(rotation);
-	        }
 	
-	        if(key === " " && new Date - this.lastFireTime >= 300){
-	          this.lastFireTime = new Date();
-	          this.ship.fireBullet();
-	        }
-	
-	      });
-	
+	      this.checkKeys();
 	      this.game.step();
 	      this.game.draw(this.ctx);
 	    }

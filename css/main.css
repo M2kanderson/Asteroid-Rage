@@ -21,6 +21,10 @@ time, mark, audio, video {
   list-style: none;
 }
 
+body{
+  background: black;
+}
+
 
 .main-container{
   display: flex;

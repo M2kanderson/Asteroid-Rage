@@ -181,16 +181,15 @@
 	};
 	
 	Game.prototype.checkNewLevel = function () {
-	  // console.log(this.asteroids.length);
 	  if(this.asteroids.length <= 0){
 	    this.level += 1;
 	    $(".lives-number").text(this.lives);
 	    this.speedMultiplier = this.level * 0.75;
 	    this.levelIncrementPause = true;
 	    $(".level-number").text(this.level);
-	    $(".level").addClass('active');
+	    $(".level").addClass('level-active');
 	    window.setTimeout(() => {
-	      $(".level").removeClass('active');
+	      $(".level").removeClass('level-active');
 	      this.addAsteroids();
 	      this.ship.invulnerableTime = 2000;
 	      this.ship.lives += 1;

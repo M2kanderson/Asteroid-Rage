@@ -117,8 +117,8 @@
 	};
 	
 	Game.prototype.randomPosition = function () {
-	  let min = 30;
-	  let randx = min + (Math.random() * (Game.DIM_X-min));
+	  let min = 100;
+	  let randx = min + (Math.random() * (Game.DIM_X-2*min));
 	  let randy = min + (Math.random() * (Game.DIM_Y-min));
 	  return [randx, randy];
 	};
@@ -162,6 +162,7 @@
 	      let otherObject = objects[j];
 	      if(currentObject.isCollidedWith(otherObject)){
 	        currentObject.collideWith(otherObject);
+	        break;
 	      }
 	    }
 	  }
@@ -172,8 +173,8 @@
 	    this.bullets.splice(this.bullets.indexOf(object), 1);
 	  } else if (object instanceof Asteroid) {
 	    this.asteroids.splice(this.asteroids.indexOf(object), 1);
-	  } else if (object instanceof Ship) {
-	    this.ships.splice(this.ships.indexOf(object), 1);
+	  // } else if (object instanceof Ship) {
+	  //   this.ships.splice(this.ships.indexOf(object), 1);
 	  } else if(object instanceof Explosion){
 	    this.explosions.splice(this.explosions.indexOf(object), 1);
 	  }
@@ -183,6 +184,7 @@
 	  // console.log(this.asteroids.length);
 	  if(this.asteroids.length <= 0){
 	    this.level += 1;
+	    $(".lives-number").text(this.lives);
 	    this.speedMultiplier = this.level * 0.75;
 	    this.levelIncrementPause = true;
 	    $(".level-number").text(this.level);
@@ -416,7 +418,7 @@
 	      $(".lives-number").text(this.lives);
 	      this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#525252", this.game));
 	      this.game.explosions.push(new Explosion2(this.pos[0], this.pos[1], "#FFA318", this.game));
-	      if(this.lives <= 0){
+	      if(this.lives < 0){
 	        this.game.gameOver = true;
 	      }else{
 	        this.invulnerableTime = 2000;
@@ -804,7 +806,6 @@
 	
 	
 	GameView.prototype.start = function (options = {}) {
-	  console.log(this.ship.lives);
 	  $(".lives-number").text(this.ship.lives);
 	  $(".lives").addClass('active');
 	  if(!options.restart){

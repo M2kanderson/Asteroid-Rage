@@ -31,7 +31,7 @@ time, mark, audio, video {
   height: 600px;*/
 }
 
-.game-over{
+.game-over, .level{
   display: none;
   position: absolute;
   font-size: 36px;
@@ -41,6 +41,31 @@ time, mark, audio, video {
   align-items: center;
   /*bottom: 50%;
   left: 50%;*/
+}
+
+.level{
+  display: none;
+  flex-direction: row;
+  position: absolute;
+  font-size: 48px;
+  color: white;
+}
+
+.level-number {
+  margin-left: 10px;
+}
+
+.lives{
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: white;
+  font-size: 24px;
+}
+
+.lives-number{
+  margin-left: 10px;
 }
 
 .try-again, .start-game{

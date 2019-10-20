@@ -1,5 +1,4 @@
-![Asteroids Logo]
-[Asteroids Logo]:http://res.cloudinary.com/pulsr/image/upload/v1473440284/Asteroid%20Rage/Logomakr_1cnh6w.png
+![Asteroids Logo](http://res.cloudinary.com/pulsr/image/upload/v1473440284/Asteroid%20Rage/Logomakr_1cnh6w.png)
 
 **The classic Asteroids game redone in JavaScript (ES6), Canvas, and jQuery!**
 
